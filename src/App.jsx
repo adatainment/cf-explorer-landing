@@ -76,6 +76,13 @@ const CardanoExplorer = () => {
   const deepLinkResolver = new DeepLinkResolver(path, query);
   const isDeepLink = deepLinkResolver.isDeepLink(path);
 
+  // An explorer can serve the current deeplink only if it is deeplink-capable and
+  // lists this deeplink type in its `supportedDeepLinks`. Each explorer states its
+  // supported types explicitly, so an opt-in type like `drep` only lights up where
+  // it is listed.
+  const handlesDeepLink = (explorer) =>
+    explorer.isDeepLink && deepLinkResolver.canHandleMode(explorer.supportedDeepLinks);
+
   const listOfExplorers = {
     cExplorer: {
       name: "Cexplorer.io",
@@ -84,6 +91,7 @@ const CardanoExplorer = () => {
       image: cExplorerLogo,
       url: deepLinkResolver.getCExplorerLink("https://cexplorer.io/"),
       isDeepLink: true,
+      supportedDeepLinks: ["transaction", "block", "epoch", "address", "governance-action", "drep"],
       networks: ["preprod", "preview"]
     },
     cardanoScan: {
@@ -93,6 +101,7 @@ const CardanoExplorer = () => {
       url: deepLinkResolver.getCardanoScanLink("https://cardanoscan.io/"),
       image: cardanoScanLogo,
       isDeepLink: true,
+      supportedDeepLinks: ["transaction", "block", "epoch", "address", "governance-action", "drep"],
       networks: ["preprod", "preview"]
     },
     poolPM: {
@@ -119,6 +128,7 @@ const CardanoExplorer = () => {
       url: deepLinkResolver.getAdaStatLink("https://adastat.net/"),
       image: adaStatLogo,
       isDeepLink: true,
+      supportedDeepLinks: ["transaction", "block", "epoch", "address", "governance-action"], // no DRep page
       networks: [] // Preprod and preview currently in progress
     },
     poolTool: {
@@ -137,7 +147,7 @@ const CardanoExplorer = () => {
   const sortedExplorers = Object.entries(listOfExplorers).sort((a,b) => 0.5 - Math.random());
   // sorting explorers based on if they are deeplink capable and if they support the requested network
   if (deepLinkResolver.isKnownDeeplink() || deepLinkResolver.network !== null) {
-    sortedExplorers.sort(([, a], [, b]) => (b.isDeepLink && deepLinkResolver.canHandleNetwork(b.networks)) - (a.isDeepLink && deepLinkResolver.canHandleNetwork(a.networks)));
+    sortedExplorers.sort(([, a], [, b]) => (handlesDeepLink(b) && deepLinkResolver.canHandleNetwork(b.networks)) - (handlesDeepLink(a) && deepLinkResolver.canHandleNetwork(a.networks)));
   }
 
   // Auto-select and redirect if user has a preference for this deeplink type and network
@@ -154,7 +164,7 @@ const CardanoExplorer = () => {
     const preferred = localStorage.getItem(prefKey);
     if (preferred && listOfExplorers[preferred]) {
       const explorer = listOfExplorers[preferred];
-      if (explorer.isDeepLink && deepLinkResolver.canHandleNetwork(explorer.networks)) {
+      if (handlesDeepLink(explorer) && deepLinkResolver.canHandleNetwork(explorer.networks)) {
         window.location.href = `${explorer.url}${query.get("value") || ""}`;
       }
     }
@@ -184,9 +194,9 @@ const CardanoExplorer = () => {
         >
           <StyledCard
             sx={{
-              // blurring explorer which can't handle the requested network and are not deeplink capable
-              opacity: (deepLinkResolver.isKnownDeeplink() && !explorer.isDeepLink) || !deepLinkResolver.canHandleNetwork(explorer.networks) ? 0.5 : 1,
-              boxShadow: (deepLinkResolver.isKnownDeeplink() && !explorer.isDeepLink) || !deepLinkResolver.canHandleNetwork(explorer.networks) ? 0 : 4,
+              // blurring explorer which can't handle the requested deeplink type or network
+              opacity: (deepLinkResolver.isKnownDeeplink() && !handlesDeepLink(explorer)) || !deepLinkResolver.canHandleNetwork(explorer.networks) ? 0.5 : 1,
+              boxShadow: (deepLinkResolver.isKnownDeeplink() && !handlesDeepLink(explorer)) || !deepLinkResolver.canHandleNetwork(explorer.networks) ? 0 : 4,
             }}
           >
             <CardMedia
@@ -212,10 +222,10 @@ const CardanoExplorer = () => {
                   {explorer.name}
                 </Typography>
                 {deepLinkResolver.isKnownDeeplink() && (<Chip
-                  color={!explorer.isDeepLink || !deepLinkResolver.canHandleNetwork(explorer.networks) ? "default" : "success"}
+                  color={!handlesDeepLink(explorer) || !deepLinkResolver.canHandleNetwork(explorer.networks) ? "default" : "success"}
                   icon={<LinkIcon />}
                   label={
-                    !explorer.isDeepLink || !deepLinkResolver.canHandleNetwork(explorer.networks)
+                    !handlesDeepLink(explorer) || !deepLinkResolver.canHandleNetwork(explorer.networks)
                       ? "link not available"
                       : "link available"
                   }

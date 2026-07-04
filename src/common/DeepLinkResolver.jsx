@@ -8,7 +8,7 @@ const screens = Object.freeze({
 })
 
 class DeepLinkResolver {
-  acceptedDeepLinks = ["transaction", "block", "epoch", "address", "tx", "governance-action"];
+  acceptedDeepLinks = ["transaction", "block", "epoch", "address", "tx", "governance-action", "drep"];
   acceptedNetworks = ["preprod", "preview"]; // mainnet is default
 
 
@@ -41,6 +41,9 @@ class DeepLinkResolver {
           break;
         case "governance-action":
           this.query.set("governance-action", pathSplit[pathSplit.length - 1]);
+          break;
+        case "drep":
+          this.query.set("drep", pathSplit[pathSplit.length - 1]);
           break;
         default:
           console.log("Unknown mode: " + this.mode);
@@ -80,6 +83,10 @@ class DeepLinkResolver {
         break;
       case "governance-action":
         link += `gov/action?search=${this.getValue(true)}`;
+        break;
+      case "drep":
+        link += `drep/${this.getValue()}`;
+        break;
     }
     return link;
   }
@@ -105,6 +112,9 @@ class DeepLinkResolver {
         break;
       case "governance-action":
         link += `govAction/${this.getValue()}`;
+        break;
+      case "drep":
+        link += `drep/${this.getValue()}`;
         break;
     }
     return link;
@@ -153,6 +163,10 @@ class DeepLinkResolver {
         } else {
           return value;
         }
+      case "drep":
+        // DReps are forwarded as-is (bech32 drep1...); the explorers that expose a
+        // DRep page resolve the bech32 id directly.
+        return this.query.get("drep");
     }
   }
 
@@ -168,6 +182,8 @@ class DeepLinkResolver {
         return this.query.has("address");
       case "governance-action":
         return this.query.has("governance-action");
+      case "drep":
+        return this.query.has("drep");
     }
   }
 
@@ -183,6 +199,8 @@ class DeepLinkResolver {
         return "address";
       case "governance-action":
         return "governance-action";
+      case "drep":
+        return "drep";
     }
   }
 
@@ -198,6 +216,8 @@ class DeepLinkResolver {
         return "address";
       case "governance-action":
         return "governance action";
+      case "drep":
+        return "DRep";
     }
   }
 
@@ -207,6 +227,14 @@ class DeepLinkResolver {
 
   canHandleNetwork(networks) {
     return this.network === undefined || this.network === null || networks.includes(this.network);
+  }
+
+  // Some explorers only support a subset of deeplink types (e.g. a governance
+  // tool that resolves DReps and governance actions but not transactions). Each
+  // explorer states the types it supports in its `supportedDeepLinks` list; there
+  // is no implicit fallback, so a new opt-in type only lights up where it is listed.
+  canHandleMode(supportedDeepLinks) {
+    return (supportedDeepLinks ?? []).includes(this.mode);
   }
 
   isDeepLink(path) {
