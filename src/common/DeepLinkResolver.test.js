@@ -136,6 +136,34 @@ describe("drep parsing (path and query forms)", () => {
   });
 });
 
+describe("DRepTalk (governance-only explorer)", () => {
+  const DREPTALK = "https://dreptalk.com/";
+
+  it("links a governance action to its discussion, keeping bech32", () => {
+    const r = make(`/governance-action/${GOV_BECH}`);
+    expect(r.getDrepTalkLink(DREPTALK)).toBe(`https://dreptalk.com/t/${GOV_BECH}`);
+  });
+
+  it("links a drep to its profile", () => {
+    const r = make(`/drep/${DREP}`);
+    expect(r.getDrepTalkLink(DREPTALK)).toBe(`https://dreptalk.com/dreps/${DREP}`);
+  });
+
+  it("serves nothing for non-governance types", () => {
+    for (const path of ["/epoch/42", "/block/12345", "/transaction/deadbeef", "/address/addr1xyz"]) {
+      expect(make(path).getDrepTalkLink(DREPTALK)).toBe(DREPTALK);
+    }
+  });
+
+  it("is only enabled for governance-action and drep", () => {
+    const supportedDeepLinks = ["governance-action", "drep"];
+    expect(make(`/drep/${DREP}`).canHandleMode(supportedDeepLinks)).toBe(true);
+    expect(make(`/governance-action/${GOV_BECH}`).canHandleMode(supportedDeepLinks)).toBe(true);
+    expect(make("/transaction/x").canHandleMode(supportedDeepLinks)).toBe(false);
+    expect(make("/epoch/42").canHandleMode(supportedDeepLinks)).toBe(false);
+  });
+});
+
 describe("canHandleMode gates each explorer to exactly its declared types", () => {
   it("supports only the listed deeplink types (AdaStat: classic types, no drep)", () => {
     const adaStat = ["transaction", "block", "epoch", "address", "governance-action"];

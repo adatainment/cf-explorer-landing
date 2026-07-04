@@ -142,6 +142,21 @@ class DeepLinkResolver {
     return link;
   }
 
+  getDrepTalkLink(baseLink) {
+    // DRepTalk is a governance-only explorer (mainnet), so it only serves the
+    // governance-action and drep types and takes the bech32 form directly.
+    var link = baseLink;
+    switch (this.mode) {
+      case "governance-action":
+        link += `t/${this.getValue(true)}`;
+        break;
+      case "drep":
+        link += `dreps/${this.getValue()}`;
+        break;
+    }
+    return link;
+  }
+
   getValue(convert) {
     switch (this.mode) {
       case "epoch":
