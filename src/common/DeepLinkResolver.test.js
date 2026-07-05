@@ -149,6 +149,17 @@ describe("DRepTalk (governance-only explorer)", () => {
     expect(r.getDrepTalkLink(DREPTALK)).toBe(`https://dreptalk.com/dreps/${DREP}`);
   });
 
+  it("uses the preprod host on preprod (no preview instance)", () => {
+    expect(make(`/preprod/governance-action/${GOV_BECH}`).getDrepTalkLink(DREPTALK)).toBe(
+      `https://preprod.dreptalk.com/t/${GOV_BECH}`,
+    );
+    expect(make(`/preprod/drep/${DREP}`).getDrepTalkLink(DREPTALK)).toBe(
+      `https://preprod.dreptalk.com/dreps/${DREP}`,
+    );
+    // mainnet stays on the apex host.
+    expect(make(`/drep/${DREP}`).getDrepTalkLink(DREPTALK)).toBe(`https://dreptalk.com/dreps/${DREP}`);
+  });
+
   it("serves nothing for non-governance types", () => {
     for (const path of ["/epoch/42", "/block/12345", "/transaction/deadbeef", "/address/addr1xyz"]) {
       expect(make(path).getDrepTalkLink(DREPTALK)).toBe(DREPTALK);

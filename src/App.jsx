@@ -113,7 +113,7 @@ const CardanoExplorer = () => {
       image: drepTalkLogo,
       isDeepLink: true,
       supportedDeepLinks: ["governance-action", "drep"],
-      networks: [] // mainnet only
+      networks: ["preprod"] // mainnet + preprod (preprod.dreptalk.com); no preview
     },
     poolPM: {
       name: "Pool PM",

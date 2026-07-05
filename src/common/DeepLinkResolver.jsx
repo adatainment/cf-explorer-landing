@@ -143,9 +143,12 @@ class DeepLinkResolver {
   }
 
   getDrepTalkLink(baseLink) {
-    // DRepTalk is a governance-only explorer (mainnet), so it only serves the
-    // governance-action and drep types and takes the bech32 form directly.
-    var link = baseLink;
+    // DRepTalk is a governance-only site: it serves the governance-action and drep
+    // types and takes the bech32 form directly. It has a preprod instance at
+    // preprod.dreptalk.com (there is no preview), reachable via the same subdomain
+    // prefix the other explorers use.
+    const networks = { preprod: "preprod." };
+    var link = baseLink.replace("https://", "https://" + (networks[this.network] || ""));
     switch (this.mode) {
       case "governance-action":
         link += `t/${this.getValue(true)}`;
