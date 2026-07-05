@@ -159,3 +159,30 @@ describe("canHandleMode gates each explorer to exactly its declared types", () =
     expect(make("/transaction/x").canHandleMode(full)).toBe(true);
   });
 });
+
+describe("governance-action deeplink resolves every documented form without crashing", () => {
+  const forms = [
+    ["path form", `/governance-action/${GOV_BECH}`, ""],
+    ["?id= query form (as documented in the help and README)", "/governance-action", `id=${GOV_BECH}`],
+    ["?governance-action= query form", "/governance-action", `governance-action=${GOV_BECH}`],
+  ];
+
+  for (const [label, path, qs] of forms) {
+    it(`${label}: resolves the id`, () => {
+      const r = make(path, qs);
+      expect(r.isCorrectPathVariable()).toBe(true);
+      // bech32 is kept when convert=true (how cExplorer consumes it); hex otherwise.
+      expect(r.getValue(true)).toBe(GOV_BECH);
+      expect(r.getValue()).toBe(GOV_HEX);
+      expect(r.getCardanoScanLink(CARDANOSCAN)).toBe(`https://cardanoscan.io/govAction/${GOV_HEX}`);
+      expect(r.getCExplorerLink(CEXPLORER)).toBe(`https://cexplorer.io/gov/action?search=${GOV_BECH}`);
+    });
+  }
+
+  it("does not throw when the id is absent (guards the null that blanked the page)", () => {
+    const r = make("/governance-action", "foo=bar");
+    expect(() => r.getValue()).not.toThrow();
+    expect(r.getValue()).toBeNull();
+    expect(r.isCorrectPathVariable()).toBe(false);
+  });
+});
