@@ -22,6 +22,7 @@ import poolPmLogo from "/assets/pool-pm.png";
 import eutxoLogo from "/assets/eutxo.png";
 import adaStatLogo from "/assets/adastat.png";
 import poolTool from "/assets/pool-tool.png";
+import drepTalkLogo from "/assets/dreptalk.png";
 import LinkIcon from "@mui/icons-material/Link";
 
 import { ThemeProvider } from "@mui/material";
@@ -103,6 +104,16 @@ const CardanoExplorer = () => {
       isDeepLink: true,
       supportedDeepLinks: ["transaction", "block", "epoch", "address", "governance-action", "drep"],
       networks: ["preprod", "preview"]
+    },
+    dRepTalk: {
+      name: "DRepTalk",
+      description:
+        "Governance focused: discussions, votes and rationales on a governance action, or a DRep's profile.",
+      url: deepLinkResolver.getDrepTalkLink("https://dreptalk.com/"),
+      image: drepTalkLogo,
+      isDeepLink: true,
+      supportedDeepLinks: ["governance-action", "drep"],
+      networks: ["preprod"] // mainnet + preprod (preprod.dreptalk.com); no preview
     },
     poolPM: {
       name: "Pool PM",
