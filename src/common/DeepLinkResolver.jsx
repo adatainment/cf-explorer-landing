@@ -156,8 +156,11 @@ class DeepLinkResolver {
         // NOTE: If the argument is provided as a bech32-encoded string, we convert it to hexadecimal because
         // not all explorers handle well gov id as bech32 string, but those who handle gov action handles them
         // fine in hexadecimal/base16.
-        const value = this.query.get("governance-action");
-        if (value.startsWith(`gov_action1`) && !convert) {
+        // The id can arrive via the documented `id` query param (e.g. ?id=gov_action1...) as well
+        // as the `governance-action` key the path form uses. Guard the null so a missing/malformed
+        // value never throws (which would blank the whole page).
+        const value = this.query.get("governance-action") ?? this.query.get("id");
+        if (value && value.startsWith(`gov_action1`) && !convert) {
           const words = bech32.fromWords(bech32.decode(value).words);
           return words.map(word => word.toString(16).padStart(2, "0")).join("");
         } else {
@@ -181,7 +184,7 @@ class DeepLinkResolver {
       case "address":
         return this.query.has("address");
       case "governance-action":
-        return this.query.has("governance-action");
+        return this.query.has("governance-action") || this.query.has("id");
       case "drep":
         return this.query.has("drep");
     }
